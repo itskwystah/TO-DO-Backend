@@ -20,3 +20,7 @@ export const getAllTodo = async (): Promise<TodoDocument[]> => {
 export const deleteTodo = async (id: string) => {
   return await TodoModel.findByIdAndDelete(id);
 };
+
+export const getTodoById = async (id: string): Promise<TodoDocument | null> => {
+  return TodoModel.findById(id);
+};

@@ -1,15 +1,17 @@
-// backend/controllers/todosController.ts
 import { Request, Response } from "express";
 import * as TodoService from "@/services/todos/todos.service";
-import { Types } from "mongoose"; // for validating ObjectId
+import { Types } from "mongoose";
 
 interface TodoPayload {
   title: string;
   description?: string;
 }
 
-// Create a new task
-export const createTodo = async (req: Request<{}, {}, TodoPayload>, res: Response) => {
+// Create a new todo
+export const createTodo = async (
+  req: Request<{}, {}, TodoPayload>,
+  res: Response
+) => {
   try {
     const { title, description } = req.body;
 
@@ -18,14 +20,18 @@ export const createTodo = async (req: Request<{}, {}, TodoPayload>, res: Respons
     }
 
     const newTask = await TodoService.createTodo({ title, description });
-    res.status(201).json(newTask);
-  } catch (err) {
-    console.error("Create task error:", err);
-    res.status(500).json({ message: "Error creating task" });
+
+    return res.status(201).json({
+      message: "Todo created successfully",
+      data: newTask,
+    });
+  } catch (error) {
+    console.error("Create todo error:", error);
+    return res.status(500).json({ message: "Error creating task" });
   }
 };
 
-// Update an existing task
+// Update an existing todo
 export const updateTodo = async (
   req: Request<{ id: string }, {}, TodoPayload>,
   res: Response
@@ -34,35 +40,84 @@ export const updateTodo = async (
     const { id } = req.params;
     const { title, description } = req.body;
 
-    // Validate MongoDB ObjectId
     if (!Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid task ID" });
     }
 
-    const updatedTodo = await TodoService.updateTodo(id, { title, description });
+    const updatedTodo = await TodoService.updateTodo(id, {
+      title,
+      description,
+    });
 
     if (!updatedTodo) {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    res.status(200).json(updatedTodo);
-  } catch (err) {
-    console.error("Update task error:", err);
-    res.status(500).json({ message: "Error updating task" });
+    return res.status(200).json({
+      message: "Todo updated successfully",
+      data: updatedTodo,
+    });
+  } catch (error) {
+    console.error("Update todo error:", error);
+    return res.status(500).json({ message: "Error updating task" });
   }
 };
 
-// Get all tasks
-export const getTodo = async (req: Request, res: Response) => {
+/**
+ * Get all todos
+ */
+export const getTodo = async (_req: Request, res: Response) => {
   try {
-    const todo = await TodoService.getAllTodo();
-    res.status(200).json(todo);
-  } catch (err) {
-    console.error("Get tasks error:", err);
-    res.status(500).json({ message: "Error fetching tasks" });
+    const todos = await TodoService.getAllTodo();
+
+    return res.status(200).json({
+      message: "Todos fetched successfully",
+      data: todos,
+    });
+  } catch (error) {
+    console.error("Get todos error:", error);
+    return res.status(500).json({ message: "Error fetching tasks" });
   }
 };
 
+/**
+ * Get a todo by ID
+ */
+export const getTodoById = async (
+  req: Request<{ id: string }>,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+
+    // Validate MongoDB ObjectId
+    if (!Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid task ID" });
+    }
+
+    // Fetch todo from service
+    const todo = await TodoService.getTodoById(id);
+
+    // Check if todo exists
+    if (!todo) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Return successful response
+    return res.status(200).json({
+      message: "Todo fetched successfully",
+      data: todo,
+    });
+
+  } catch (error) {
+    console.error("Get todo error:", error);
+    return res.status(500).json({ message: "Error fetching task" });
+  }
+};
+
+/**
+ * Delete a todo
+ */
 export const deleteTodo = async (
   req: Request<{ id: string }>,
   res: Response
@@ -80,10 +135,12 @@ export const deleteTodo = async (
       return res.status(404).json({ message: "Task not found" });
     }
 
-    res.status(200).json({ message: "Task deleted successfully" });
-  } catch (err) {
-    console.error("Delete todo error:", err);
-    res.status(500).json({ message: "Error deleting task" });
+    return res.status(200).json({
+      message: "Todo deleted successfully",
+      data: deletedTodo,
+    });
+  } catch (error) {
+    console.error("Delete todo error:", error);
+    return res.status(500).json({ message: "Error deleting task" });
   }
 };
-
