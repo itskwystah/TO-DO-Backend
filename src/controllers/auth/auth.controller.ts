@@ -3,17 +3,24 @@ import { compareHashed, hashValue } from "@/utils/bcrypt/bcrypt";
 import { AppError } from "@/utils/error/app-error.util";
 import { Request, Response } from "express";
 
+// Register an account
 export const reg = async (req: Request, res: Response) => {
   // Get body data
-  const { name, email, password } = req.body;
+  const { name, email, password, confirmPassword } = req.body;
 
   // if (!name) throw new AppError("Name is required.", 400);
   // if (!email) throw new AppError("Email is required.", 400);
   // if (!password) throw new AppError("Password is required.", 400);
 
   // Check if fields have data
-  if (!name || !email || !password)
+  if (!name || !email || !password || !confirmPassword) {
     throw new AppError("All field are required.", 400);
+  }
+
+  // Check iif the password and confirm password is correct
+  if (password !== confirmPassword) {
+    throw new AppError("Password and Confirm Password do not match.", 400);
+  }
 
   // Find existing email
   if (await findAcctS({ email })) {
