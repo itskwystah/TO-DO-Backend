@@ -1,4 +1,4 @@
-import { AcctDocType } from "@/types/account/account.type";
+import { AcctDocType } from "@/types/models/account.type";
 import { model, Model, Schema } from "mongoose"
 
 const AcctSchema = new Schema<AcctDocType>(

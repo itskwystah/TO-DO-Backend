@@ -1,5 +1,5 @@
-import TodoModel, { TodoDocument } from "@/models/todos/todos.model";
-import { ITodo } from "@/types/todos/todos.types";
+import TodoModel, { TodoDocument } from "@/models/todo/todo.model";
+import { ITodo } from "@/types/models/todo.types";
 
 export const createTodo = async (taskData: ITodo): Promise<TodoDocument> => {
   const task = new TodoModel(taskData);

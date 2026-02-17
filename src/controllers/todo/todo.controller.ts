@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import * as TodoService from "@/services/todos/todos.service";
+import * as TodoService from "@/services/todo/todo.service";
 import { Types } from "mongoose";
 
 interface TodoPayload {
@@ -52,7 +52,7 @@ export const updateTodo = async (
     });
 
     if (!updatedTodo) {
-      return res.status(404).json({ message: "Task not found" });
+      return res.status(404).json({ message: "Todo not found" });
     }
 
     return res.status(200).json({

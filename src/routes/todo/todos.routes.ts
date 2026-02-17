@@ -1,6 +1,6 @@
 import express from "express";
-import * as TodoController from "@/controllers/todos/todos.controller";
-import { getTodoById } from "@/controllers/todos/todos.controller";
+import * as TodoController from "@/controllers/todo/todo.controller";
+import { getTodoById } from "@/controllers/todo/todo.controller";
 
 
 const todosRouter = express.Router();

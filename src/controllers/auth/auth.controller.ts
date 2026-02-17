@@ -1,91 +1,168 @@
-import { findAcctS, regS } from "@/services/auth/auth.service";
-import { compareHashed, hashValue } from "@/utils/bcrypt/bcrypt";
-import { AppError } from "@/utils/error/app-error.util";
+// libraries
 import { Request, Response } from "express";
+import { v4 as uuid } from "uuid";
 
-// Register an account
+// Models
+import Account from "@/models/account/account.model";
+
+// Services
+import {
+  findAcctS,
+  pushSessionS,
+  regS,
+} from "@/services/account/account.service";
+
+// Utils
+import { compareHashed, hashValue } from "@/utils/bcrypt/bcrypt.util";
+import {
+  clearRefreshCookie,
+  REFRESH_COOKIE_NAME,
+  setRefreshCookie,
+} from "@/utils/cookie/cookie.util";
+import { AppError } from "@/utils/error/app-error.util";
+import {
+  signAccessToken,
+  signRefreshToken,
+  verifyRefreshToken,
+} from "@/utils/jwt/jwt.util";
+import { buildSession } from "@/utils/session/session.util";
+
+
+// Register account
 export const reg = async (req: Request, res: Response) => {
-  // Get body data
+  // Get the data from request body
   const { name, email, password, confirmPassword } = req.body;
 
-  // if (!name) throw new AppError("Name is required.", 400);
-  // if (!email) throw new AppError("Email is required.", 400);
-  // if (!password) throw new AppError("Password is required.", 400);
-
-  // Check if fields have data
+  // Validate required fields
   if (!name || !email || !password || !confirmPassword) {
     throw new AppError("All field are required.", 400);
   }
 
-  // Check iif the password and confirm password is correct
+  // Confirm password match
   if (password !== confirmPassword) {
     throw new AppError("Password and Confirm Password do not match.", 400);
   }
 
-  // Find existing email
-  if (await findAcctS({ email })) {
+  // Check existing email
+  const existing = await findAcctS({ email });
+  if (existing) {
     throw new AppError("Email already exist.", 409);
   }
 
-  // Hashed password
+  // Hash password
   const hashedPass = await hashValue(password);
 
-  // Create Account
+  // Create account
   const account = await regS({
     name,
     email,
     password: hashedPass,
-  });
+  } as any);
 
-  // Return response
-  res
-    .status(200)
-    .json({ message: "Account registered successfully.", account });
+  if (!account) {
+    throw new AppError("Failed to create account.", 500);
+  }
+
+  // Generate session id
+  const sid = uuid();
+
+  // Generate tokens
+  const sub = String(account._id);
+  const accessToken = signAccessToken(sub);
+  const refreshToken = signRefreshToken(sub, sid);
+
+  // Build session and save to db
+  const session = await buildSession(req, refreshToken, sid);
+
+  // Push the session to db
+  const updated = await pushSessionS(sub, session);
+  if (!updated) throw new AppError("Account not found.", 404);
+
+  // Set the refresh token in cookie
+  setRefreshCookie(res, refreshToken);
+
+// Send response
+  return res.status(200).json({
+    message: "Account registered successfully.",
+    accessToken,
+  });
 };
 
+// Login account
 export const login = async (req: Request, res: Response) => {
-  // Get body data
+  // Get the data from request body
   const { email, password } = req.body;
 
-  //   if (!name) throw new AppError("Name is required.", 400);
-  //   if (!email) throw new AppError("Email is required.", 400);
-  //   if (!password) throw new AppError("Password is required.", 400);
-
-  // Check if fields have data
-  if (!email || !password) throw new AppError("All field are required.", 400);
+  // Validate required fields
+  if (!email || !password) {
+    throw new AppError("All field are required.", 400);
+  }
 
   // Find account
   const account = await findAcctS({ email });
-
   if (!account) {
     throw new AppError("Account not found.", 400);
   }
 
-  // Check password
-  const passCorrect = await compareHashed(password, account.password);
-  if (!passCorrect) {
+  // Verify password
+  const ok = await compareHashed(password, account.password);
+  if (!ok) {
     throw new AppError("Incorrect password.", 400);
   }
 
-  // Return response
-  res.status(200).json({ message: "Login successfully.", account });
+  // Generate session id
+  const sid = uuid();
+
+  // Generate tokens
+  const sub = String(account._id);
+  const accessToken = signAccessToken(sub);
+  const refreshToken = signRefreshToken(sub, sid);
+
+  // Build session
+  const session = await buildSession(req, refreshToken, sid);
+
+  // Save session
+  const updated = await pushSessionS(sub, session);
+  if (!updated) throw new AppError("Account not found.", 404);
+
+  // Store refresh token cookie
+  setRefreshCookie(res, refreshToken);
+
+  return res.status(200).json({
+    message: "Login successfully.",
+    accessToken,
+  });
 };
 
-// Logout Acct
+
+// Logout account
 export const logOut = async (req: Request, res: Response) => {
-  const { email } = req.body;
+  const token = req.cookies?.[REFRESH_COOKIE_NAME];
 
-  // Check if data exist
-  if (!email) throw new AppError("Email not exist.", 400);
+  // remove session if token exists
+  if (token) {
+    try {
+      const payload = verifyRefreshToken(token) as {
+        sub: string;
+        sid: string;
+      };
 
-  const acct = await findAcctS({ email });
+      await Account.updateOne(
+        { _id: payload.sub },
+        { $pull: { sessions: { sid: payload.sid } } },
+      );
+    } catch (err) {
+      if (process.env.NODE_ENV !== "production") {
+        console.error("Logout verify failed:", err);
+      }
+    }
+  }
 
-  // Check if the email exist
-  if (!acct) throw new AppError("User not found.", 404);
+  // clear the refresh token cookie
+  clearRefreshCookie(res);
 
-  // Return Response
-  res.status(200).json({
-    message: "Logout Successfully.",
-    acct,
+  // Send response
+  return res.status(200).json({
+    message: "Logged out successfully.",
   });
 };

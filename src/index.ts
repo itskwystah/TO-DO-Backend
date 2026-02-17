@@ -13,7 +13,7 @@ import initDB from "@/db/db.connect.js";
 import { globalErrorHandler } from "./middlewares/global-error-handler.middleware";
 import { globalRateLimiter } from "./middlewares/limiter.middleware";
 import { authRoute } from "./routes/auth/auth.route";
-import todosRouter from "./routes/todos/todos.routes";
+import todosRouter from "./routes/todo/todos.routes";
 
 const bootstrap = async () => {
   const app = express();
