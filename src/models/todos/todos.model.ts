@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { ITodo } from "@/types/todos/todos";
+import { ITodo } from "@/types/todos/todos.types";
 
 export interface TodoDocument extends ITodo, Document {}
 

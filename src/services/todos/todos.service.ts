@@ -1,18 +1,15 @@
-
 import TodoModel, { TodoDocument } from "@/models/todos/todos.model";
-import { ITodo } from "@/types/todos/todos";
+import { ITodo } from "@/types/todos/todos.types";
 
 export const createTodo = async (taskData: ITodo): Promise<TodoDocument> => {
   const task = new TodoModel(taskData);
   return task.save();
 };
 
-export const updateTodo = async (
-  id: string,
-  taskData: Partial<ITodo>
-): Promise<TodoDocument | null> => {
-  return TodoModel.findByIdAndUpdate(id, taskData, { new: true });
+export const updateTodo = async (id: string, payload: Partial<ITodo>) => {
+  return TodoModel.findByIdAndUpdate(id, payload, { new: true });
 };
+
 
 export const getAllTodo = async (): Promise<TodoDocument[]> => {
   return TodoModel.find();

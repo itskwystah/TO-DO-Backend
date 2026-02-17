@@ -5,6 +5,7 @@ import { Types } from "mongoose";
 interface TodoPayload {
   title: string;
   description?: string;
+  completed?: boolean; // to allows the completed toggle
 }
 
 // Create a new todo
@@ -38,7 +39,7 @@ export const updateTodo = async (
 ) => {
   try {
     const { id } = req.params;
-    const { title, description } = req.body;
+    const { title, description, completed } = req.body;
 
     if (!Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid task ID" });
@@ -47,6 +48,7 @@ export const updateTodo = async (
     const updatedTodo = await TodoService.updateTodo(id, {
       title,
       description,
+      completed, // include completed field
     });
 
     if (!updatedTodo) {
@@ -63,9 +65,7 @@ export const updateTodo = async (
   }
 };
 
-/**
- * Get all todos
- */
+// Get all todos
 export const getTodo = async (_req: Request, res: Response) => {
   try {
     const todos = await TodoService.getAllTodo();
