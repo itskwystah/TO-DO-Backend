@@ -14,6 +14,8 @@ import { globalErrorHandler } from "./middlewares/global-error-handler.middlewar
 import { globalRateLimiter } from "./middlewares/limiter.middleware";
 import { authRoute } from "./routes/auth/auth.route";
 import todosRouter from "./routes/todo/todos.routes";
+import { accountRouter } from "./routes/account/account.route";
+import { tokenRouter } from "./routes/token/token.route";
 
 const bootstrap = async () => {
   const app = express();
@@ -64,9 +66,9 @@ const bootstrap = async () => {
 
   // Routes
    app.use("/api/auth/", authRoute);
-   app.use("/api/todos", todosRouter);
-  
-  
+   app.use("/api/todos/", todosRouter);
+  app.use("/api/account/", accountRouter)
+  app.use("/api/token/", tokenRouter)
 
   // Error handler
   app.use(globalErrorHandler);
