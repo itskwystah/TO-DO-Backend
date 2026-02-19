@@ -10,7 +10,6 @@ export const updateTodo = async (id: string, payload: Partial<ITodo>) => {
   return TodoModel.findByIdAndUpdate(id, payload, { new: true });
 };
 
-
 export const getAllTodo = async (): Promise<TodoDocument[]> => {
   return TodoModel.find();
 };

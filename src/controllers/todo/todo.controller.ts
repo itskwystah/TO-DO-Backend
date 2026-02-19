@@ -11,7 +11,7 @@ interface TodoPayload {
 // Create a new todo
 export const createTodo = async (
   req: Request<{}, {}, TodoPayload>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { title, description } = req.body;
@@ -35,7 +35,7 @@ export const createTodo = async (
 // Update an existing todo
 export const updateTodo = async (
   req: Request<{ id: string }, {}, TodoPayload>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -83,7 +83,7 @@ export const getTodo = async (_req: Request, res: Response) => {
 // Get a todo by ID
 export const getTodoById = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;
@@ -111,7 +111,7 @@ export const getTodoById = async (
 // Delete a todo
 export const deleteTodo = async (
   req: Request<{ id: string }>,
-  res: Response
+  res: Response,
 ) => {
   try {
     const { id } = req.params;

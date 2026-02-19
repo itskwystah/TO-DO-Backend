@@ -7,7 +7,11 @@ import { v4 as uuid } from "uuid";
 import Account from "@/models/account/account.model";
 
 // Services
-import { findAcctS, pushSessionS, regS, } from "@/services/account/account.service";
+import {
+  findAcctS,
+  pushSessionS,
+  regS,
+} from "@/services/account/account.service";
 
 // Utils
 import { compareHashed, hashValue } from "@/utils/bcrypt/bcrypt.util";
@@ -24,7 +28,6 @@ import {
 } from "@/utils/jwt/jwt.util";
 import { buildSession } from "@/utils/session/session.util";
 import { sendEmail } from "@/utils/mailer/mail";
-
 
 // Register account
 export const reg = async (req: Request, res: Response) => {
@@ -79,7 +82,7 @@ export const reg = async (req: Request, res: Response) => {
   // Set the refresh token in cookie
   setRefreshCookie(res, refreshToken);
 
-// Send response
+  // Send response
   return res.status(200).json({
     message: "Account registered successfully.",
     accessToken,
@@ -132,7 +135,6 @@ export const login = async (req: Request, res: Response) => {
   });
 };
 
-
 // Logout account
 export const logOut = async (req: Request, res: Response) => {
   const token = req.cookies?.[REFRESH_COOKIE_NAME];
@@ -163,10 +165,10 @@ export const logOut = async (req: Request, res: Response) => {
   return res.status(200).json({
     message: "Logged out successfully.",
   });
-}
+};
 
-  // Send Otp for forgot password
-  export const sendForgotPasswordOtp = async (req: Request, res: Response) => {
+// Send Otp for forgot password
+export const sendForgotPasswordOtp = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   if (!email) {
@@ -192,14 +194,14 @@ export const logOut = async (req: Request, res: Response) => {
     {
       forgotOtp: hashedOtp,
       forgotOtpExpires: expires,
-    }
+    },
   );
 
   // Send email
   await sendEmail({
     to: email,
     subject: "Your Password Reset OTP",
-     text: `Your OTP is: ${otp}. It will expire in 10 minutes.`,
+    text: `Your OTP is: ${otp}. It will expire in 10 minutes.`,
     html: `<h3>Your OTP is: <b>${otp}</b></h3><p>This OTP will expire in 10 minutes.</p>`,
   });
 
@@ -209,10 +211,7 @@ export const logOut = async (req: Request, res: Response) => {
 };
 
 // Resend OTP
-export const resendForgotPasswordOtp = async (
-  req: Request,
-  res: Response
-) => {
+export const resendForgotPasswordOtp = async (req: Request, res: Response) => {
   const { email } = req.body;
 
   if (!email) {
@@ -234,7 +233,7 @@ export const resendForgotPasswordOtp = async (
     {
       forgotOtp: hashedOtp,
       forgotOtpExpires: expires,
-    }
+    },
   );
 
   await sendEmail({
@@ -250,10 +249,7 @@ export const resendForgotPasswordOtp = async (
 };
 
 // Verify OTP
-export const verifyForgotPasswordOtp = async (
-  req: Request,
-  res: Response
-) => {
+export const verifyForgotPasswordOtp = async (req: Request, res: Response) => {
   const { email, otp } = req.body;
 
   if (!email || !otp) {
@@ -282,11 +278,14 @@ export const verifyForgotPasswordOtp = async (
 // Reset password
 export const resetPassword = async (req: Request, res: Response) => {
   const { email, otp, newPassword } = req.body;
-  if (!email || !otp || !newPassword) throw new AppError("All fields are required.", 400);
+  if (!email || !otp || !newPassword)
+    throw new AppError("All fields are required.", 400);
 
   const account = await findAcctS({ email });
-  if (!account || !account.forgotOtp || !account.forgotOtpExpires) throw new AppError("Invalid request.", 400);
-  if (account.forgotOtpExpires < new Date()) throw new AppError("OTP expired.", 400);
+  if (!account || !account.forgotOtp || !account.forgotOtpExpires)
+    throw new AppError("Invalid request.", 400);
+  if (account.forgotOtpExpires < new Date())
+    throw new AppError("OTP expired.", 400);
 
   const isMatch = await compareHashed(otp, account.forgotOtp);
   if (!isMatch) throw new AppError("Invalid OTP.", 400);
@@ -296,7 +295,12 @@ export const resetPassword = async (req: Request, res: Response) => {
   // Clear OTP and old sessions
   await Account.updateOne(
     { _id: account._id },
-    { password: hashedPass, forgotOtp: null, forgotOtpExpires: null, sessions: [] }
+    {
+      password: hashedPass,
+      forgotOtp: null,
+      forgotOtpExpires: null,
+      sessions: [],
+    },
   );
 
   // Auto-login

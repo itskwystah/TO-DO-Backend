@@ -1,5 +1,5 @@
-import { AcctDocType, SessionType } from '@/types/models/account.type';
-import { model, Model, Schema } from 'mongoose';
+import { AcctDocType, SessionType } from "@/types/models/account.type";
+import { model, Model, Schema } from "mongoose";
 
 const SessionSchema = new Schema<SessionType>(
   {
@@ -54,13 +54,13 @@ const AcctSchema = new Schema<AcctDocType>(
 
     // OTP fields for forgot password
     forgotOtp: { type: String, default: null },
-    forgotOtpExpires: { type: Date, default: null },  
+    forgotOtpExpires: { type: Date, default: null },
   },
   { timestamps: true },
 );
 
 const Acct: Model<AcctDocType> = model<AcctDocType, Model<AcctDocType>>(
-  'accounts',
+  "accounts",
   AcctSchema,
 );
 

@@ -1,4 +1,12 @@
-import { login, logOut, reg, resendForgotPasswordOtp, resetPassword, sendForgotPasswordOtp, verifyForgotPasswordOtp } from "@/controllers/auth/auth.controller"
+import {
+  login,
+  logOut,
+  reg,
+  resendForgotPasswordOtp,
+  resetPassword,
+  sendForgotPasswordOtp,
+  verifyForgotPasswordOtp,
+} from "@/controllers/auth/auth.controller";
 import { Router } from "express";
 
 export const authRoute = Router();

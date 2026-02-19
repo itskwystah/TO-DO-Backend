@@ -1,19 +1,19 @@
 import Account from "@/models/account/account.model";
 import {
-    AcctDocType,
-    AcctFilType,
-    AcctType,
-    SessionType,
-} from "@/types/models/account.type"
+  AcctDocType,
+  AcctFilType,
+  AcctType,
+  SessionType,
+} from "@/types/models/account.type";
 
 export const findAcctS = async (
-    filter: AcctFilType,
-    selectFields?: string,
+  filter: AcctFilType,
+  selectFields?: string,
 ): Promise<AcctDocType | null> => {
-    const account = await Account.findOne(filter)
+  const account = await Account.findOne(filter)
     .select(selectFields || "")
     .exec();
-    return account as AcctDocType | null;
+  return account as AcctDocType | null;
 };
 
 export const pushSessionS = async (accountId: string, session: SessionType) => {
@@ -25,6 +25,6 @@ export const pushSessionS = async (accountId: string, session: SessionType) => {
 };
 
 export const regS = async (data: AcctType) => {
-    const account = await Account.create(data);
-    return account;
+  const account = await Account.create(data);
+  return account;
 };

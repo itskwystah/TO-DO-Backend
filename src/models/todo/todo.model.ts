@@ -9,7 +9,7 @@ const TodoSchema: Schema = new Schema(
     description: { type: String },
     completed: { type: Boolean, default: false },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 const TodoModel = mongoose.model<TodoDocument>("Todo", TodoSchema);
