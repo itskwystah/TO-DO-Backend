@@ -47,14 +47,16 @@ export type SessionType = {
 };
 
 export type AcctType = {
-    _id: string;
-    name: string;
-    email: string;
-    password: string;
-    sessions: SessionType[];
+  _id: string;
+  name: string;
+  email: string;
+  password: string;
+  forgotOtp?: string | null;
+  forgotOtpExpires?: Date | null;
+
+  sessions: SessionType[];
 };
 
 export type AcctFilType = Partial<AcctType>;
 
 export type AcctDocType = AcctType & Document;
-

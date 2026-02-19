@@ -5,7 +5,7 @@ import { Types } from "mongoose";
 interface TodoPayload {
   title: string;
   description?: string;
-  completed?: boolean; // to allows the completed toggle
+  completed?: boolean; // to allow the completed toggle
 }
 
 // Create a new todo
@@ -48,7 +48,7 @@ export const updateTodo = async (
     const updatedTodo = await TodoService.updateTodo(id, {
       title,
       description,
-      completed, // include completed field
+      completed,
     });
 
     if (!updatedTodo) {
@@ -80,9 +80,7 @@ export const getTodo = async (_req: Request, res: Response) => {
   }
 };
 
-/**
- * Get a todo by ID
- */
+// Get a todo by ID
 export const getTodoById = async (
   req: Request<{ id: string }>,
   res: Response
@@ -90,34 +88,27 @@ export const getTodoById = async (
   try {
     const { id } = req.params;
 
-    // Validate MongoDB ObjectId
     if (!Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "Invalid task ID" });
     }
 
-    // Fetch todo from service
     const todo = await TodoService.getTodoById(id);
 
-    // Check if todo exists
     if (!todo) {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    // Return successful response
     return res.status(200).json({
       message: "Todo fetched successfully",
       data: todo,
     });
-
   } catch (error) {
     console.error("Get todo error:", error);
     return res.status(500).json({ message: "Error fetching task" });
   }
 };
 
-/**
- * Delete a todo
- */
+// Delete a todo
 export const deleteTodo = async (
   req: Request<{ id: string }>,
   res: Response

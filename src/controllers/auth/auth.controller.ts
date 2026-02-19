@@ -1,16 +1,13 @@
 // libraries
 import { Request, Response } from "express";
 import { v4 as uuid } from "uuid";
+//import crypto from "crypto";
 
 // Models
 import Account from "@/models/account/account.model";
 
 // Services
-import {
-  findAcctS,
-  pushSessionS,
-  regS,
-} from "@/services/account/account.service";
+import { findAcctS, pushSessionS, regS, } from "@/services/account/account.service";
 
 // Utils
 import { compareHashed, hashValue } from "@/utils/bcrypt/bcrypt.util";
@@ -26,6 +23,7 @@ import {
   verifyRefreshToken,
 } from "@/utils/jwt/jwt.util";
 import { buildSession } from "@/utils/session/session.util";
+import { sendEmail } from "@/utils/mailer/mail";
 
 
 // Register account
@@ -164,5 +162,156 @@ export const logOut = async (req: Request, res: Response) => {
   // Send response
   return res.status(200).json({
     message: "Logged out successfully.",
+  });
+}
+
+  // Send Otp for forgot password
+  export const sendForgotPasswordOtp = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new AppError("Email is required.", 400);
+  }
+
+  const account = await findAcctS({ email });
+  if (!account) {
+    throw new AppError("Account not found.", 404);
+  }
+
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Hash OTP before saving
+  const hashedOtp = await hashValue(otp);
+
+  // Expire in 10 minutes
+  const expires = new Date(Date.now() + 10 * 60 * 1000);
+
+  await Account.updateOne(
+    { _id: account._id },
+    {
+      forgotOtp: hashedOtp,
+      forgotOtpExpires: expires,
+    }
+  );
+
+  // Send email
+  await sendEmail({
+    to: email,
+    subject: "Your Password Reset OTP",
+     text: `Your OTP is: ${otp}. It will expire in 10 minutes.`,
+    html: `<h3>Your OTP is: <b>${otp}</b></h3><p>This OTP will expire in 10 minutes.</p>`,
+  });
+
+  return res.status(200).json({
+    message: "OTP sent successfully.",
+  });
+};
+
+// Resend OTP
+export const resendForgotPasswordOtp = async (
+  req: Request,
+  res: Response
+) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw new AppError("Email is required.", 400);
+  }
+
+  const account = await findAcctS({ email });
+  if (!account) {
+    throw new AppError("Account not found.", 404);
+  }
+
+  // Generate new OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const hashedOtp = await hashValue(otp);
+  const expires = new Date(Date.now() + 10 * 60 * 1000);
+
+  await Account.updateOne(
+    { _id: account._id },
+    {
+      forgotOtp: hashedOtp,
+      forgotOtpExpires: expires,
+    }
+  );
+
+  await sendEmail({
+    to: email,
+    subject: "Your New Password Reset OTP",
+    text: `Your new OTP is: ${otp}. It will expire in 10 minutes.`,
+    html: `<h3>Your new OTP is: <b>${otp}</b></h3><p>This OTP will expire in 10 minutes.</p>`,
+  });
+
+  return res.status(200).json({
+    message: "OTP resent successfully.",
+  });
+};
+
+// Verify OTP
+export const verifyForgotPasswordOtp = async (
+  req: Request,
+  res: Response
+) => {
+  const { email, otp } = req.body;
+
+  if (!email || !otp) {
+    throw new AppError("Email and OTP are required.", 400);
+  }
+
+  const account = await findAcctS({ email });
+  if (!account || !account.forgotOtp || !account.forgotOtpExpires) {
+    throw new AppError("Invalid request.", 400);
+  }
+
+  if (account.forgotOtpExpires < new Date()) {
+    throw new AppError("OTP expired.", 400);
+  }
+
+  const isMatch = await compareHashed(otp, account.forgotOtp);
+  if (!isMatch) {
+    throw new AppError("Invalid OTP.", 400);
+  }
+
+  return res.status(200).json({
+    message: "OTP verified successfully.",
+  });
+};
+
+// Reset password
+export const resetPassword = async (req: Request, res: Response) => {
+  const { email, otp, newPassword } = req.body;
+  if (!email || !otp || !newPassword) throw new AppError("All fields are required.", 400);
+
+  const account = await findAcctS({ email });
+  if (!account || !account.forgotOtp || !account.forgotOtpExpires) throw new AppError("Invalid request.", 400);
+  if (account.forgotOtpExpires < new Date()) throw new AppError("OTP expired.", 400);
+
+  const isMatch = await compareHashed(otp, account.forgotOtp);
+  if (!isMatch) throw new AppError("Invalid OTP.", 400);
+
+  const hashedPass = await hashValue(newPassword);
+
+  // Clear OTP and old sessions
+  await Account.updateOne(
+    { _id: account._id },
+    { password: hashedPass, forgotOtp: null, forgotOtpExpires: null, sessions: [] }
+  );
+
+  // Auto-login
+  const sid = uuid();
+  const sub = String(account._id);
+  const accessToken = signAccessToken(sub);
+  const refreshToken = signRefreshToken(sub, sid);
+
+  const session = await buildSession(req, refreshToken, sid);
+  await pushSessionS(sub, session);
+
+  setRefreshCookie(res, refreshToken);
+
+  return res.status(200).json({
+    message: "Password reset successfully.",
+    accessToken,
   });
 };

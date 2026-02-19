@@ -51,6 +51,10 @@ const AcctSchema = new Schema<AcctDocType>(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     sessions: [SessionSchema],
+
+    // OTP fields for forgot password
+    forgotOtp: { type: String, default: null },
+    forgotOtpExpires: { type: Date, default: null },  
   },
   { timestamps: true },
 );
