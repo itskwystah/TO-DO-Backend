@@ -28,6 +28,7 @@ import {
 } from "@/utils/jwt/jwt.util";
 import { buildSession } from "@/utils/session/session.util";
 import { sendEmail } from "@/utils/mailer/mail";
+import { sendForgotPasswordOtpEmail } from "@/utils/mailer/scheduleConfirmationEmail";
 
 // Register account
 export const reg = async (req: Request, res: Response) => {
@@ -197,13 +198,7 @@ export const sendForgotPasswordOtp = async (req: Request, res: Response) => {
     },
   );
 
-  // Send email
-  await sendEmail({
-    to: email,
-    subject: "Your Password Reset OTP",
-    text: `Your OTP is: ${otp}. It will expire in 10 minutes.`,
-    html: `<h3>Your OTP is: <b>${otp}</b></h3><p>This OTP will expire in 10 minutes.</p>`,
-  });
+  await sendForgotPasswordOtpEmail(email, otp);
 
   return res.status(200).json({
     message: "OTP sent successfully.",
