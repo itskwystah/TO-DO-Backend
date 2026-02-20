@@ -231,12 +231,7 @@ export const resendForgotPasswordOtp = async (req: Request, res: Response) => {
     },
   );
 
-  await sendEmail({
-    to: email,
-    subject: "Your New Password Reset OTP",
-    text: `Your new OTP is: ${otp}. It will expire in 10 minutes.`,
-    html: `<h3>Your new OTP is: <b>${otp}</b></h3><p>This OTP will expire in 10 minutes.</p>`,
-  });
+ await sendForgotPasswordOtpEmail(email, otp);
 
   return res.status(200).json({
     message: "OTP resent successfully.",
