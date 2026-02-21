@@ -62,12 +62,6 @@ export const sendForgotPasswordOtpEmail = async (
             </td>
           </tr>
 
-          <tr>
-            <td style="padding-top:30px; font-size:12px; color:#aaa;" align="center">
-              © ${new Date().getFullYear()} Your Company. All rights reserved.
-            </td>
-          </tr>
-
         </table>
       </td>
     </tr>
